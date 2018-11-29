@@ -14,9 +14,10 @@ class archi():
         self.reseaux = []
 
         self.points = points
+        self.nb_nodes = len(self.points)
+        self.is_in_boucle = [False] * self.nb_nodes
         self.length = length
         
-        self.nb_nodes = len(self.points)
         self.value = 0
 
     def is_feasible(self):
@@ -25,7 +26,8 @@ class archi():
         else:
             tmp_ant = np.array([p[2] == 1 for p in self.points])
             for r in self.reseaux:
-                if sum([self.points[v][2] == 0 for v in r["boucle"]]) > 30:
+                s = sum([self.points[v][2] == 0 for v in r["boucle"]])
+                if s > 30 or s == len(r["boucle"]):
                     return False
                 for v in r["boucle"]:
                     if self.points[v][2] == 0:
@@ -34,14 +36,15 @@ class archi():
                         else:
                             tmp_ant[v] = True
                 for c in r["chaines"]:
-                    if len(c) > 5:
+                    if len(c) > 6:
                         return False
                     for v in range(1, len(c)):
-                        if self.points[v][2] == 0:
-                            if tmp_ant[v]:
+                        if self.points[c[v]][2] == 0:
+                            if tmp_ant[c[v]]:
                                 return False
                             else:
-                                tmp_ant[v] = True
+                                tmp_ant[c[v]] = True
+            print(tmp_ant)
             return np.all(tmp_ant)
 
     def get_value(self):
@@ -60,3 +63,21 @@ class archi():
 
     def set_reseaux(self, reseaux):
         self.reseaux = reseaux
+        self.is_in_boucle = [False] * self.nb_nodes
+        for r in reseaux:
+            for v in r["boucle"]:
+                self.is_in_boucle[v] = True
+
+
+    def where(self, index):
+        if self.is_in_boucle[index]:
+            for r in len(range(self.reseaux)):
+                if index in self.reseaux[r]["boucle"]:
+                    return r, None
+        else:
+            for r in len(range(self.reseaux)):
+                for c in len(range(self.reseaux[r]["chaines"])):
+                    if index in self.reseaux[r]["chaines"][c]:
+                        return r, c
+        return None, None
+        
