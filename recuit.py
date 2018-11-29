@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Thu Nov 29 16:21:22 2018
+
+@author: anatole parre
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Thu Oct 25 09:08:45 2018
 
 @author: anatole parre
@@ -18,24 +25,21 @@ def generation_voisin(solution, k):
     
 def generation_sol_initiale(input_sommets, mat_distance):
     # K means avec nombre de distributeurs
-    cluster_nb = input_sommets[:, 2].sum()
+    cluster_nb = int(input_sommets[:, 2].sum())
     #k_means = sklearn.cluster.KMeans(input_sommets[:, 2].sum()).fit(input_sommets[0:2, :])
 
-    _, distrib_indices = np.nonzero(input_sommets[:, 2])
-    recept_indices = range(input_sommets.shape[0])
-    recept_indices = np.array([idx for idx in recept_indices if idx not in distrib_indices])
-    
-    clustering = np.argmin(mat_distance[recept_indices, distrib_indices], axis=1)
+    distrib_indices = np.where(input_sommets[:, 2] == 1)[0]
+    recept_indices = np.where(input_sommets[:, 2] ==0)[0]
+    clustering = np.argmin(mat_distance[distrib_indices,:][:,recept_indices], axis=0)
     print(clustering.shape)
 
     clusters = [[]]*cluster_nb
     for sommet_idx in range(recept_indices.shape[0]):
         clusters[clustering[sommet_idx]].append(sommet_idx)
-
-    for cluster_idx in range(distrib_indices):
+    
+    for cluster_idx in range(cluster_nb):
         cluster_label = distrib_indices[cluster_idx]
-
-        # cree les boucles
+    return(clustering)
 
 
 """ 
