@@ -5,13 +5,15 @@ Created on Thu Nov 29 13:58:26 2018
 @author: anatole parre
 """
 
-filename_distance = 'pim/distances.csv'
-filename_nodes = 'pim/nodes.csv'
-filename_write = 'pim/results.txt'
+filename_distance = 'grenoble/distances.csv'
+filename_nodes = 'grenoble/nodes.csv'
+filename_write = 'grenoble/results.txt'
 
 import numpy as np
 import csv
 import matplotlib.pyplot as plt
+
+from recuit import generation_sol_initiale
 
 def read_file_distance(filename): #return matrix_distance
     
@@ -68,6 +70,7 @@ def affichage(nodes_coords):
     plt.plot(nodes_coords[indexes_terminal,0], nodes_coords[indexes_terminal,1],'b.')
     plt.show()
 
-#mat_dist = read_file_distance(filename_distance)
-#nodes_coords = read_file_nodes(filename_nodes)
+mat_dist = read_file_distance(filename_distance)
+nodes_coords = read_file_nodes(filename_nodes)
+generation_sol_initiale(nodes_coords, mat_dist)
 #write_results(reseaux, filename_write)

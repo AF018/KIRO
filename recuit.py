@@ -5,41 +5,97 @@ Created on Thu Nov 29 16:21:22 2018
 @author: anatole parre
 """
 
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 25 09:08:45 2018
-
-@author: anatole parre
-"""
-
 import numpy as np
 import random as rd
-import sklearn
+import sklearn.cluster
 import time
 import copy
+
+from tsp_solver.greedy import solve_tsp
 
 def generation_voisin(solution, k):
     neighbor = copy.deepcopy(solution)
 
     return neighbor
     
-def generation_sol_initiale(input_sommets, mat_distance):
+def generation_sol_initiale(input_sommets, mat_dist):
+
+    reseaux = []
+
     # K means avec nombre de distributeurs
     cluster_nb = int(input_sommets[:, 2].sum())
     #k_means = sklearn.cluster.KMeans(input_sommets[:, 2].sum()).fit(input_sommets[0:2, :])
 
     distrib_indices = np.where(input_sommets[:, 2] == 1)[0]
     recept_indices = np.where(input_sommets[:, 2] ==0)[0]
-    clustering = np.argmin(mat_distance[distrib_indices,:][:,recept_indices], axis=0)
-    print(clustering.shape)
+    clustering = np.argmin(mat_dist[:,distrib_indices], axis=1)
 
-    clusters = [[]]*cluster_nb
-    for sommet_idx in range(recept_indices.shape[0]):
-        clusters[clustering[sommet_idx]].append(sommet_idx)
-    
+    # clusters = [[]]*cluster_nb
+    # for sommet_idx in range(input_sommets.shape[0]):
+    #     clusters[clustering[sommet_idx]].append(sommet_idx)
+
     for cluster_idx in range(cluster_nb):
-        cluster_label = distrib_indices[cluster_idx]
-    return(clustering)
+        # cree un reseau par cluster
+        reseau = {}
+        distrib_index = distrib_indices[cluster_idx]
+        print(distrib_indices, distrib_index)
+
+        cluster_vertices_indices = np.where(clustering == cluster_idx)[0]
+        k_means_nb = cluster_vertices_indices.shape[0] // 3
+
+        k_means = sklearn.cluster.KMeans(k_means_nb).fit(input_sommets[cluster_vertices_indices, 0:2])
+        k_mean_clusters = [[]]*(k_means_nb)
+        for clust in range(k_means_nb):
+            clust_idx = np.where(k_means.labels_ == clust)[0]
+            k_mean_clusters[clust] = cluster_vertices_indices[clust_idx]
+
+        selected_boucles = []
+        dic_kmeans_cluster_to_selected = {}
+        for k_mean_cluster in k_mean_clusters:
+            if (distrib_index in k_mean_cluster):
+                print("selection de distrib ", distrib_index)
+                selected_idx = np.where(k_mean_cluster == distrib_index)[0][0]
+            else:
+                selected_idx = np.random.randint(0, len(k_mean_cluster))
+            dic_kmeans_cluster_to_selected[k_mean_cluster[0]] = k_mean_cluster[selected_idx]
+            selected_boucles.append(k_mean_cluster[selected_idx])
+        print("k_mean_clusters", k_mean_clusters)
+        print("selected_bouclses", selected_boucles)
+
+        tsp_solver_mat = []
+        for ind, point in enumerate(selected_boucles):
+            tsp_solver_mat.append(mat_dist[point, selected_boucles[:ind]])
+        tsp_path = solve_tsp(tsp_solver_mat)
+        print(tsp_path)
+        print("tsp_path", np.array(selected_boucles)[np.array(tsp_path)])
+
+        reseau['boucle'] = np.array(selected_boucles)[np.array(tsp_path)]
+        reseau['chaines'] = []
+
+        for k_mean_cluster in k_mean_clusters:
+            tsp_solver_mat = []
+            for ind, point in enumerate(k_mean_cluster):
+                tsp_solver_mat.append(mat_dist[point, k_mean_cluster[:ind]])
+            tsp_path = solve_tsp(tsp_solver_mat)
+            tsp_path = np.array(k_mean_cluster)[np.array(tsp_path)]
+            selected_idx = dic_kmeans_cluster_to_selected[k_mean_cluster[0]]
+            print("selected_idx", selected_idx)
+            print("tsp_path", tsp_path)
+            position_selected = np.where(tsp_path == selected_idx)[0][0]
+            print(position_selected)
+            tsp_path_1 = tsp_path[position_selected:]
+            tsp_path_2 = tsp_path[:position_selected+1]
+            tsp_path_2 = tsp_path_2[::-1]
+            if (len(tsp_path_1) > 1):
+                reseau['chaines'].append(tsp_path_1)
+            if (len(tsp_path_2) > 1):
+                reseau['chaines'].append(tsp_path_2)
+            print("branch", tsp_path, tsp_path_1, tsp_path_2)
+        reseaux.append(reseau)
+
+    print(reseaux)
+
+    return reseaux
 
 
 """ 
@@ -56,14 +112,14 @@ def energy(coords_pts, matAdjCom, matAdjCap, capteurs_total):
 def P(E1, E2, T):
     return(np.exp((E2-E1)/T))
 
-def recuit_simule(mat_distance, Rcom, Rcapt):
+def recuit_simule(mat_dist, Rcom, Rcapt):
     #parametres
     Kmax = 100
     param_temperature = 0.99
     T0 = 100
     nb_affichage = 100
     
-    coords_pts, mat_dist, matAdjCom, matAdjCap, capteurs = generation_sol_initiale(mat_distance, Rcom, Rcapt)
+    coords_pts, mat_dist, matAdjCom, matAdjCap, capteurs = generation_sol_initiale(mat_dist, Rcom, Rcapt)
     #tool_box.trace(coords_pts, capteurs, Rcom, matAdjCap)
 
     energie_courante = energy(coords_pts, matAdjCom, matAdjCap, capteurs)
@@ -99,11 +155,11 @@ def recuit_simule(mat_distance, Rcom, Rcapt):
     
 if True:
     
-    mat_distance = 'Instances\captANOR225_9_20.dat'
-    #mat_distance = 10
+    mat_dist = 'Instances\captANOR225_9_20.dat'
+    #mat_dist = 10
 
     Rcom = 1
     Rcapt = 1
     
-    print("Longueur optimale ",recuit_simule(mat_distance, Rcom, Rcapt))
+    print("Longueur optimale ",recuit_simule(mat_dist, Rcom, Rcapt))
 """
