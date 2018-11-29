@@ -11,6 +11,7 @@ filename_write = 'pim/results.txt'
 
 import numpy as np
 import csv
+import matplotlib.pyplot as plt
 
 def read_file_distance(filename): #return matrix_distance
     
@@ -61,7 +62,12 @@ def write_results(reseaux, filename_write):
                     f.write(str(c) + " ")
                 f.write("\n")
     
+def affichage(nodes_coords):
+    indexes_terminal = np.where(nodes_coords[:,2] == 0)
+    plt.plot(nodes_coords[:,0], nodes_coords[:,1],'r.')
+    plt.plot(nodes_coords[indexes_terminal,0], nodes_coords[indexes_terminal,1],'b.')
+    plt.show()
 
 #mat_dist = read_file_distance(filename_distance)
-nodes_coords = read_file_nodes(filename_nodes)
-write_results(reseaux, filename_write)
+#nodes_coords = read_file_nodes(filename_nodes)
+#write_results(reseaux, filename_write)
