@@ -5,9 +5,11 @@ Created on Thu Nov 29 13:58:26 2018
 @author: anatole parre
 """
 
-filename_distance = 'grenoble/distances.csv'
-filename_nodes = 'grenoble/nodes.csv'
-filename_write = 'grenoble/results.txt'
+nom_ville = 'pim'
+
+filename_distance = nom_ville + '/distances.csv'
+filename_nodes = nom_ville + '/nodes.csv'
+filename_write = nom_ville + '/results.txt'
 
 import numpy as np
 import csv
@@ -53,17 +55,20 @@ def write_results(reseaux, filename_write):
     with open(filename_write, 'w') as f:
         for reseau in reseaux:
             boucle = reseau['boucle']
-            f.write("b ")
+            f.write("b")
             index = np.argmin(boucle)
-            new_boucle = boucle[index:] + boucle[:index]
+            print("boucle", boucle, index)
+            print("new_boucle", boucle[index:], boucle[:index])
+            new_boucle = np.concatenate((boucle[index:], boucle[:index]))
+            print(new_boucle)
             for b in new_boucle:
-                f.write(str(b) + " ")
+                f.write(" " + str(b))
             f.write("\n")
             chaines = reseau['chaines']
             for chaine in chaines:
-                f.write("c ")
+                f.write("c")
                 for c in chaine:
-                    f.write(str(c) + " ")
+                    f.write(" " + str(c))
                 f.write("\n")
     
 def affichage(nodes_coords):
@@ -74,5 +79,5 @@ def affichage(nodes_coords):
 
 mat_dist = read_file_distance(filename_distance)
 nodes_coords = read_file_nodes(filename_nodes)
-generation_sol_initiale(nodes_coords, mat_dist)
-#write_results(reseaux, filename_write)
+reseaux = generation_sol_initiale(nodes_coords, mat_dist)
+write_results(reseaux, filename_write)
