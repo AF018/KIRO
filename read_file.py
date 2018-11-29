@@ -54,7 +54,9 @@ def write_results(reseaux, filename_write):
         for reseau in reseaux:
             boucle = reseau['boucle']
             f.write("b ")
-            for b in boucle:
+            index = np.argmin(boucle)
+            new_boucle = boucle[index:] + boucle[:index]
+            for b in new_boucle:
                 f.write(str(b) + " ")
             f.write("\n")
             chaines = reseau['chaines']
